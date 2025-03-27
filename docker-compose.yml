@@ -1,0 +1,7 @@
+services:
+  postybirb:
+    image: jcotton42/my-postybirb
+    ports:
+      - 9247:9247
+    volumes:
+      - postybirb-data:/home/postybirb/data
