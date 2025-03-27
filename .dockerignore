@@ -3,8 +3,6 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
-*.[Aa]pp[Ii]mage
-
 # dotenv files
 .env
 

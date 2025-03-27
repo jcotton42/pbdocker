@@ -1,20 +1,15 @@
 #!/bin/bash
 
-cleanup() {
-    pkill postybirb-plus
-}
-
-trap cleanup SIGTERM
-
-export APPDIR=/home/postybirb/app
+export APPDIR=/app/pb
 export DISPLAY=:0
 
-mkdir -p /home/postybirb/data/data /home/postybirb/data/config
+mkdir -p /app/data/data /app/data/config
 
-cd "$APPDIR"
 Xvfb :0 > /dev/null 2>&1 &
+/app/PushoverStub/PushoverStub &
+cd "$APPDIR"
 # --no-sandbox is workaround for "The SUID sandbox helper binary was found, but
 # is not configured correctly. Rather than run without sandboxing I'm aborting
 # now" error
 ./AppRun --server --no-sandbox &
-wait $!
+wait

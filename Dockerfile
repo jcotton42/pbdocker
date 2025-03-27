@@ -1,3 +1,17 @@
+FROM mcr.microsoft.com/dotnet/nightly/sdk:9.0-noble-aot AS build
+
+WORKDIR /app/src
+COPY PushoverStub/PushoverStub.csproj .
+RUN dotnet restore
+COPY PushoverStub .
+RUN dotnet publish -c Release -o /app/out/PushoverStub
+COPY --chmod=755 start.sh /app/out
+
+WORKDIR /app/pb
+COPY --chmod=755 postybirb-plus.AppImage .
+RUN ./postybirb-plus.AppImage --appimage-extract \
+    && mv squashfs-root /app/out/pb
+
 FROM ubuntu:24.04
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
@@ -15,16 +29,13 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 
 RUN useradd -mU postybirb
 USER postybirb
-WORKDIR /home/postybirb
+WORKDIR /app
 
-RUN mkdir -p /home/postybirb/data /home/postybirb/.config \
-    && ln -s /home/postybirb/data/data /home/postybirb/PostyBirb \
-    && ln -s /home/postybirb/data/config /home/postybirb/.config/postybirb-plus
-COPY --chown=postybirb:postybirb --chmod=755 start.sh postybirb-plus.AppImage ./
-RUN ./postybirb-plus.AppImage --appimage-extract \
-    && mv squashfs-root app \
-    && rm postybirb-plus.AppImage
+RUN mkdir -p /app/data /home/postybirb/.config \
+    && ln -s /app/data/data /home/postybirb/PostyBirb \
+    && ln -s /app/data/config /home/postybirb/.config/postybirb-plus
+COPY --from=build --chown=postybirb:postybirb /app/out .
 
 EXPOSE 9247
-VOLUME /home/postybirb/data
-ENTRYPOINT ["/home/postybirb/start.sh"]
+VOLUME /app/data
+ENTRYPOINT ["/app/start.sh"]
