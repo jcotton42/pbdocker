@@ -1,7 +1,8 @@
 services:
   postybirb:
-    image: jcotton42/my-postybirb
+    image: jcotton42/my-postybirb:latest
     ports:
       - 9247:9247
     volumes:
-      - postybirb-data:/home/postybirb/data
+      - postybirb-data:/app/data
+    init: true
