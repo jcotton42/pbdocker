@@ -1,35 +1,46 @@
-using System.Text.Json.Serialization;
+using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-});
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
-var sampleTodos = new Todo[] {
-    new(1, "Walk the dog"),
-    new(2, "Do the dishes", DateOnly.FromDateTime(DateTime.Now)),
-    new(3, "Do the laundry", DateOnly.FromDateTime(DateTime.Now.AddDays(1))),
-    new(4, "Clean the bathroom"),
-    new(5, "Clean the car", DateOnly.FromDateTime(DateTime.Now.AddDays(2)))
-};
-
-var todosApi = app.MapGroup("/todos");
-todosApi.MapGet("/", () => sampleTodos);
-todosApi.MapGet("/{id}", (int id) =>
-    sampleTodos.FirstOrDefault(a => a.Id == id) is { } todo
-        ? Results.Ok(todo)
-        : Results.NotFound());
+app.MapPost("/", ProxyToPushover).DisableAntiforgery();
 
 app.Run();
 
-public record Todo(int Id, string? Title, DateOnly? DueBy = null, bool IsComplete = false);
-
-[JsonSerializable(typeof(Todo[]))]
-internal partial class AppJsonSerializerContext : JsonSerializerContext
+async Task<IResult> ProxyToPushover(
+    [FromHeader] string user,
+    [FromHeader] string token,
+    [FromForm] string title,
+    [FromForm] string description,
+    HttpClient httpClient,
+    IFormFile? thumbnail = null)
 {
+    var content = new MultipartFormDataContent();
+    content.Add(new StringContent(user), "user");
+    content.Add(new StringContent(token), "token");
+    content.Add(new StringContent($"Posted {title}"), "title");
+    content.Add(new StringContent(description), "message");
 
+    Stream? thumbnailStream = null;
+    try
+    {
+        if (thumbnail is not null)
+        {
+            thumbnailStream = thumbnail.OpenReadStream();
+            var thumbnailContent = new StreamContent(thumbnailStream);
+            thumbnailContent.Headers.ContentType = MediaTypeHeaderValue.Parse(thumbnail.ContentType);
+            content.Add(thumbnailContent, "attachment", thumbnail.FileName);
+        }
+
+        var response = await httpClient.PostAsync("https://api.pushover.net/1/messages.json", content);
+        return response.IsSuccessStatusCode ? Results.Ok() : Results.BadRequest(response.ReasonPhrase);
+    }
+    finally
+    {
+        thumbnailStream?.Dispose();
+    }
 }

@@ -4,7 +4,7 @@ WORKDIR /app/src
 COPY PushoverStub/PushoverStub.csproj .
 RUN dotnet restore
 COPY PushoverStub .
-RUN dotnet publish -c Release -o /app/out/PushoverStub
+RUN dotnet publish -c Release -o /app/out/PushoverStub /p:DebugType=None /p:DebugSymbols=false
 COPY --chmod=755 start.sh /app/out
 
 WORKDIR /app/pb
@@ -15,6 +15,7 @@ RUN ./postybirb-plus.AppImage --appimage-extract \
 FROM ubuntu:24.04
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+    ca-certificates \
     libglib2.0-0t64 \
     libnss3 \
     libatk1.0-0t64 \
@@ -36,6 +37,6 @@ RUN mkdir -p /app/data /home/postybirb/.config \
     && ln -s /app/data/config /home/postybirb/.config/postybirb-plus
 COPY --from=build --chown=postybirb:postybirb /app/out .
 
-EXPOSE 9247
+EXPOSE 9247 5000
 VOLUME /app/data
 ENTRYPOINT ["/app/start.sh"]
