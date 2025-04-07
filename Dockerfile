@@ -37,6 +37,6 @@ RUN mkdir -p /app/data /home/postybirb/.config \
     && ln -s /app/data/config /home/postybirb/.config/postybirb-plus
 COPY --from=build --chown=postybirb:postybirb /app/out .
 
-EXPOSE 9247 5000
+EXPOSE 9247
 VOLUME /app/data
 ENTRYPOINT ["/app/start.sh"]
