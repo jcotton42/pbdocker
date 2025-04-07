@@ -5,7 +5,7 @@ export DISPLAY=:0
 
 mkdir -p /app/data/data /app/data/config
 
-Xvfb :0 > /dev/null 2>&1 &
+Xvfb "$DISPLAY" > /dev/null 2>&1 &
 /app/PushoverStub/PushoverStub &
 cd "$APPDIR"
 # --no-sandbox is workaround for "The SUID sandbox helper binary was found, but
