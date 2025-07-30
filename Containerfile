@@ -12,7 +12,7 @@ COPY --chmod=755 postybirb-plus.AppImage .
 RUN ./postybirb-plus.AppImage --appimage-extract \
     && mv squashfs-root /app/out/pb
 
-FROM ubuntu:24.04
+FROM docker.io/ubuntu:24.04
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     ca-certificates \

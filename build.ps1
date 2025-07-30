@@ -1,3 +1,4 @@
+#!/usr/bin/pwsh
 $release = Invoke-RestMethod -Headers @{'Accept' = 'application/vnd.github+json'; 'X-GitHub-Api-Version' = '2022-11-28' } 'https://api.github.com/repos/mvdicarlo/postybirb-plus/releases/latest'
 $asset = $release.assets | Where-Object name -like *.appimage
 
